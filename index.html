@@ -131,8 +131,9 @@
                 // Guarda o token para usar depois
                 localStorage.setItem('user_token', data.token);
                 
-                // Mostra uma mensagem de sucesso
-                document.body.innerHTML = `<h1>Login bem-sucedido!</h1><p>Bem-vindo, ${data.user.nome}.</p><p>Seu perfil é: ${data.user.perfil}</p>`;
+                
+                window.location.href = '/admin.html'; // Redireciona para a página do admin
+
 
             } catch (error) {
                 messageDiv.innerText = error.message;
@@ -142,3 +143,4 @@
     </script>
 </body>
 </html>
+
