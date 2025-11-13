@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+	<link rel="stylesheet" href="style.css">
     <meta charset="UTF-8">
     <title>Admin - Matérias-Primas</title>
     <style>
@@ -16,6 +17,7 @@
     </style>
 </head>
 <body>
+	<div id="nav-menu"></div>
     <div class="container">
         <button id="logout-btn" onclick="handleLogout()">Sair</button>
         <h1>Painel do Administrador</h1>
@@ -111,6 +113,33 @@
 
         // Carrega os itens quando a página abre
         fetchItems();
+<head>
+    ...
+    <title>Admin - Matérias-Primas</title>
+    <link rel="stylesheet" href="style.css"> <!-- LINHA ADICIONADA -->
+</head>
+<body>
+    <div class="container">
+        <div id="nav-menu"></div> <!-- DIV ADICIONADA -->
+        <button id="logout-btn" onclick="handleLogout()">Sair</button>
+        ...
+    </div>
+    <script>
+        // ... todo o seu script existente ...
+
+        // CÓDIGO ADICIONADO NO FINAL DO SCRIPT
+        function renderMenu() {
+            const menu = `
+                <a href="/admin.html" class="active">Matérias-Primas</a>
+                <a href="/receitas.html">Receitas</a>
+            `;
+            document.getElementById('nav-menu').innerHTML = menu;
+        }
+        renderMenu();
+        fetchItems();
+    </script>
+</body>
+
     </script>
 </body>
 </html>

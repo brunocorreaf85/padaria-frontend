@@ -1,0 +1,16 @@
+body { font-family: sans-serif; margin: 0; background-color: #f9f9f9; }
+.container { max-width: 800px; margin: 2em auto; background: white; padding: 2em; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+table { width: 100%; border-collapse: collapse; margin-top: 2em; }
+th, td { border: 1px solid #ddd; padding: 0.8em; text-align: left; }
+th { background-color: #f2f2f2; }
+input, select, button { padding: 0.8em; border: 1px solid #ccc; border-radius: 4px; font-size: 1em; }
+button { cursor: pointer; }
+#logout-btn { background-color: #dc3545; color: white; float: right; }
+#message { margin: 1em 0; }
+/* Estilos para formulários */
+.form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1em; margin-bottom: 1em; }
+.ingrediente-row { display: grid; grid-template-columns: 1fr 2fr 1fr auto; gap: 0.5em; margin-bottom: 0.5em; }
+/* Menu */
+#nav-menu { background-color: #333; padding: 1em; margin-bottom: 2em; border-radius: 8px 8px 0 0; margin: -2em -2em 2em -2em; }
+#nav-menu a { color: white; text-decoration: none; padding: 1em; }
+#nav-menu a.active { font-weight: bold; border-bottom: 2px solid #007bff; }

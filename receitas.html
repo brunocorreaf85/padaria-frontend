@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin - Receitas</title>
+    <link rel="stylesheet" href="style.css"> <!-- Usaremos um CSS compartilhado -->
+</head>
+<body>
+    <div class="container">
+        <div id="nav-menu">
+            <!-- O menu será inserido aqui -->
+        </div>
+        <h1>Gerenciar Receitas</h1>
+
+        <form id="add-receita-form" onsubmit="handleCreateRecipe(event)">
+            <h3>Nova Receita</h3>
+            <div class="form-grid">
+                <input type="text" id="receita-nome" placeholder="Nome da Receita" required>
+                <input type="number" id="receita-rendimento" placeholder="Rendimento" step="0.001" required>
+                <select id="receita-unidade">
+                    <option value="kg">kg</option>
+                    <option value="unidade">unidade</option>
+                </select>
+                <label><input type="checkbox" id="eh-sub-receita"> É uma sub-receita?</label>
+            </div>
+
+            <h4>Ingredientes</h4>
+            <div id="ingredientes-container">
+                <!-- Ingredientes dinâmicos aqui -->
+            </div>
+            <button type="button" onclick="addIngredienteRow()">+ Adicionar Ingrediente</button>
+            <hr>
+            <button type="submit">Salvar Receita</button>
+        </form>
+        
+        <div id="message"></div>
+
+        <h2>Receitas Cadastradas</h2>
+        <table id="receitas-table">
+            <thead>
+                <tr><th>ID</th><th>Nome</th><th>Rendimento</th><th>Tipo</th></tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <script>
+        const API_URL = 'https://padaria-api-71xk.onrender.com';
+        const token = localStorage.getItem('user_token' );
+        if (!token) window.location.href = '/index.html';
+
+        const ingredientesContainer = document.getElementById('ingredientes-container');
+        const messageDiv = document.getElementById('message');
+        let materiasPrimasList = [];
+        let subReceitasList = [];
+
+        // Carrega dados iniciais (matérias-primas e receitas para os seletores)
+        async function fetchInitialData() {
+            try {
+                const [mpRes, recRes] = await Promise.all([
+                    fetch(`${API_URL}/api/materias-primas`, { headers: { 'Authorization': `Bearer ${token}` } }),
+                    fetch(`${API_URL}/api/receitas`, { headers: { 'Authorization': `Bearer ${token}` } })
+                ]);
+                materiasPrimasList = await mpRes.json();
+                const allRecipes = await recRes.json();
+                subReceitasList = allRecipes.filter(r => r.eh_sub_receita);
+                
+                updateReceitasTable(allRecipes);
+                addIngredienteRow(); // Adiciona a primeira linha de ingrediente
+            } catch (err) {
+                messageDiv.innerText = "Erro ao carregar dados iniciais.";
+            }
+        }
+
+        function updateReceitasTable(recipes) {
+            const tableBody = document.querySelector('#receitas-table tbody');
+            tableBody.innerHTML = '';
+            recipes.forEach(r => {
+                const tipo = r.eh_sub_receita ? 'Sub-receita' : 'Produto Final';
+                tableBody.innerHTML += `<tr><td>${r.id}</td><td>${r.nome}</td><td>${r.rendimento} ${r.unidade_rendimento}</td><td>${tipo}</td></tr>`;
+            });
+        }
+
+        function addIngredienteRow() {
+            const row = document.createElement('div');
+            row.className = 'ingrediente-row';
+            row.innerHTML = `
+                <select class="ingrediente-tipo" onchange="updateIngredienteSeletores(this)">
+                    <option value="materia_prima">Matéria-Prima</option>
+                    <option value="sub_receita">Sub-receita</option>
+                </select>
+                <select class="ingrediente-id"></select>
+                <input type="number" class="ingrediente-qtd" placeholder="Qtd" step="0.001" required>
+                <button type="button" onclick="this.parentElement.remove()">X</button>
+            `;
+            ingredientesContainer.appendChild(row);
+            updateIngredienteSeletores(row.querySelector('.ingrediente-tipo'));
+        }
+
+        function updateIngredienteSeletores(tipoSelect) {
+            const idSelect = tipoSelect.parentElement.querySelector('.ingrediente-id');
+            const tipo = tipoSelect.value;
+            idSelect.innerHTML = '';
+            const list = (tipo === 'materia_prima') ? materiasPrimasList : subReceitasList;
+            list.forEach(item => {
+                idSelect.innerHTML += `<option value="${item.id}">${item.nome}</option>`;
+            });
+        }
+
+        async function handleCreateRecipe(event) {
+            event.preventDefault();
+            const ingredientes = [];
+            document.querySelectorAll('.ingrediente-row').forEach(row => {
+                ingredientes.push({
+                    tipo: row.querySelector('.ingrediente-tipo').value,
+                    id: parseInt(row.querySelector('.ingrediente-id').value),
+                    quantidade: parseFloat(row.querySelector('.ingrediente-qtd').value)
+                });
+            });
+
+            const recipeData = {
+                nome: document.getElementById('receita-nome').value,
+                rendimento: parseFloat(document.getElementById('receita-rendimento').value),
+                unidade_rendimento: document.getElementById('receita-unidade').value,
+                eh_sub_receita: document.getElementById('eh-sub-receita').checked,
+                ingredientes: ingredientes
+            };
+
+            try {
+                const response = await fetch(`${API_URL}/api/receitas`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify(recipeData)
+                });
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.message);
+                
+                messageDiv.innerText = "Receita criada com sucesso!";
+                document.getElementById('add-receita-form').reset();
+                ingredientesContainer.innerHTML = '';
+                fetchInitialData(); // Recarrega tudo
+            } catch (err) {
+                messageDiv.innerText = err.message;
+            }
+        }
+
+        fetchInitialData();
+    </script>
+</body>
+</html>
