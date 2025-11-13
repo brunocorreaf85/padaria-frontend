@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin - Matérias-Primas</title>
+    <style>
+        body { font-family: sans-serif; margin: 2em; background-color: #f9f9f9; }
+        .container { max-width: 800px; margin: auto; background: white; padding: 2em; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        table { width: 100%; border-collapse: collapse; margin-top: 2em; }
+        th, td { border: 1px solid #ddd; padding: 0.8em; text-align: left; }
+        th { background-color: #f2f2f2; }
+        form { display: flex; gap: 1em; align-items: center; margin-bottom: 2em; }
+        input, select, button { padding: 0.8em; border: 1px solid #ccc; border-radius: 4px; }
+        button { background-color: #28a745; color: white; cursor: pointer; }
+        #logout-btn { background-color: #dc3545; float: right; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <button id="logout-btn" onclick="handleLogout()">Sair</button>
+        <h1>Painel do Administrador</h1>
+        <h2>Gerenciar Matérias-Primas</h2>
+
+        <form id="add-form" onsubmit="handleAddItem(event)">
+            <input type="text" id="nome" placeholder="Nome da matéria-prima" required>
+            <select id="unidade_medida">
+                <option value="kg">kg</option>
+                <option value="litro">litro</option>
+                <option value="unidade">unidade</option>
+            </select>
+            <button type="submit">Adicionar</button>
+        </form>
+
+        <div id="message"></div>
+        <table id="items-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nome</th>
+                    <th>Unidade</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Linhas serão inseridas aqui pelo JavaScript -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        const API_URL = 'https://padaria-api-71xk.onrender.com';
+        const token = localStorage.getItem('user_token' );
+
+        // 1. Proteger a Página
+        if (!token) {
+            window.location.href = '/index.html'; // Se não tem token, expulsa para o login
+        }
+
+        const tableBody = document.querySelector('#items-table tbody');
+        const messageDiv = document.getElementById('message');
+
+        // 2. Buscar e Exibir os Itens
+        async function fetchItems() {
+            try {
+                const response = await fetch(`${API_URL}/api/materias-primas`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (response.status === 403 || response.status === 401) {
+                    handleLogout(); // Se o token for inválido, faz logout
+                }
+                const items = await response.json();
+                tableBody.innerHTML = ''; // Limpa a tabela
+                items.forEach(item => {
+                    const row = `<tr><td>${item.id}</td><td>${item.nome}</td><td>${item.unidade_medida}</td></tr>`;
+                    tableBody.innerHTML += row;
+                });
+            } catch (error) {
+                messageDiv.innerText = 'Erro ao carregar itens.';
+            }
+        }
+
+        // 3. Adicionar um Novo Item
+        async function handleAddItem(event) {
+            event.preventDefault();
+            const nome = document.getElementById('nome').value;
+            const unidade_medida = document.getElementById('unidade_medida').value;
+
+            try {
+                const response = await fetch(`${API_URL}/api/materias-primas`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ nome, unidade_medida })
+                });
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.message);
+                
+                document.getElementById('add-form').reset();
+                fetchItems(); // Recarrega a lista
+            } catch (error) {
+                messageDiv.innerText = error.message;
+            }
+        }
+        
+        // 4. Fazer Logout
+        function handleLogout() {
+            localStorage.removeItem('user_token');
+            window.location.href = '/index.html';
+        }
+
+        // Carrega os itens quando a página abre
+        fetchItems();
+    </script>
+</body>
+</html>
